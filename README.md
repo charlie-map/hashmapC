@@ -5,7 +5,8 @@ This is a simple implementation of a hashmap where a user can input a `key` alon
 1. [Hashmap Creation - `make__hashmap()`](#create-the-hashmap)
 2. [Hashmap Insertion - `insert__hashmap()`](#insert-into-the-hashmap)
 3. [Hashmap Selection - `get__hashmap()`](#select-from-hashmap)
-4. [Hashmap Destruction - `destroy__hashmap()`](#destroy-the-hashmap)
+4. [Hashmap Deletion - `delete__hashmap()`](#delete-from-hashmap)
+5. [Hashmap Destruction - `deepdestroy__hashmap()`](#destroy-the-hashmap)
 
 # create the hashmap
 The first part is creating a hashmap by including the `hashmap.h` header in your file with:
@@ -82,8 +83,8 @@ insert__hashmap(mymap, someDifferentKey, giraffe);
 
 The same concept can be used for **hash type 1** where the values create an array at each location in the hashmap. The only change is instead creating the hashmap with `hash type = 0`, this would be `hash type = 1`:
 
-###### insert into hash type 2 with `char *`
-<a name="#"></a>
+###### insert into hash type 1 with `char *`
+<a name="#insert_char_hashtype1"></a>
 *Same insertion code again*
 
 # select from hashmap
@@ -133,12 +134,19 @@ for (int printResponse = 0; printResponse < hashmap__response->payload__length; 
 
 This same concept can then be used for defining a struct print pattern.
 
+# delete from hashmap
+Similar to [selection](#select-from-hashmap), this takes a `key` and finds the `value` and removes the value (and `free()`s) from the hashmap bucket. The following shows deleting a singular key (using `someKeys` from the [insertion example](#insert_char_hashtype0)) from a hashmap. This will work for all types of values in the hashmap:
+
+```C
+delete__hashmap(mymap, someKeys);
+```
+
 # destroy the hashmap
 Destroy will free any memory allocated within itself. This will include using the `destroy` function parameter given in the [creation of the hashmap](#define-the-hashmap). Using the following will destroy the entire hashmap:
 
 ```C
-destroy__hashmap(mymap);
+deepdestroy__hashmap(mymap);
 ```
 
 # future components
-Looking forward, refactors will come out occasionally to support ease of use and efficiency boosts. Look for new functionality such as `delete` and `get keys`
+Looking forward, refactors will come out occasionally to support ease of use and efficiency boosts. Look for new functionality such as `get keys`and `get values`
