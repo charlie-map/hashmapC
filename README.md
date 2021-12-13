@@ -2,12 +2,12 @@
 ###### Charlie Hall
 
 This is a simple implementation of a hashmap where a user can input a `key` along with a `value` and have constant time insertion and selection. This follows the general approach for a hashmap; uses a hash function (a bit shifting hash function), which will devide keys uniformly into buckets of values. The buckets are implemented using a built in linked list that has been altered to have functionality specifically for this approach. Since buckets are in use and no hash function has perfect hashing, the theoretical complexity for insertion and selection is `m` where `m` is the number of items in a single bucket. As seen at the top of `hashmap.c`, the variable `MAX_BUCKET_SIZE` defines how many elements can be in a single bucket before a resizing (see below) of the hashmap occurs. Each linked list node will have a `void *` pointer to whatever input is given, which means the hashmap can contain any form of information from small `char *` to major structs. The hashmap has the following main functionalities:
-1. [Hashmap Creation - `make__hashmap()`](#define-the-hashmap)
+1. [Hashmap Creation - `make__hashmap()`](#create-the-hashmap)
 2. [Hashmap Insertion - `insert__hashmap()`](#insert-into-the-hashmap)
 3. [Hashmap Selection - `get__hashmap()`](#select-from-hashmap)
 4. [Hashmap Destruction - `destroy__hashmap()`](#destroy-the-hashmap)
 
-# define the hashmap
+# create the hashmap
 The first part is creating a hashmap by including the `hashmap.h` header in your file with:
 
 ```C
@@ -22,14 +22,17 @@ hashmap *mymap = make__hashmap(hash type, printer, destroy);
 
 The parameters follow the below definitions:
 
-1. **hash type**: takes either a `0` or a `1` and will create the hashmap based on that specification:
+## **hash type**
+takes either a `0` or a `1` and will create the hashmap based on that specification:
     - 0: REPLACES duplicates. If the key is seen, this will overwrite
 		the previous value at that key
     - 1: STRUCTURES duplicates. If the inputted key is already in the
 		hashmap, this will create an array at that key and store both
 		values (this can hold as many values as the user inserts)
-2. **printer**: an inputted function that can take the values inserted into the hashmap and print them. Due to the hashmap using `void *` for values, this is required for seeing the outputted information.
-3. **destroy**: an inputted function that handles the removal of the value inside of the hashmap. The simplest version would be the use of a `char *` as the value. Creating a `destroy` function in that scenario would look like:
+## **printer**
+an inputted function that can take the values inserted into the hashmap and print them. Due to the hashmap using `void *` for values, this is required for seeing the outputted information.
+## **destroy**
+an inputted function that handles the removal of the value inside of the hashmap. The simplest version would be the use of a `char *` as the value. Creating a `destroy` function in that scenario would look like:
 
 ```C
 void destroyObject(void *str) {
@@ -114,8 +117,8 @@ Selection for **hash type 1** will follow a similar pattern. However, the result
 
 ```C
 typedef struct ReturnHashmap {
-	void **meat;
-	int meat__length;
+	void **payload;
+	int payload__length;
 } hashmap__response;
 ```
 
@@ -123,8 +126,8 @@ Thus, to read the values from [hash type 1 insertion](#insert_char_hashtype1), t
 ```C
 hashmap__response *getMultiValue = (hashmap__response *) get__hashmap(mymap, "123");
 
-for (int printResponse = 0; printResponse < hashmap__response->meat__length; printResponse++) {
-    printf ("The value at '123' is %s\n", (char *) ((void **) hashmap__response->meat)[printResponse]);
+for (int printResponse = 0; printResponse < hashmap__response->payload__length; printResponse++) {
+    printf ("The value at '123' is %s\n", (char *) ((void **) hashmap__response->payload)[printResponse]);
 }
 ```
 
