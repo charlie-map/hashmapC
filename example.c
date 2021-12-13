@@ -3,12 +3,7 @@
 #include <time.h>
 #include "hashmap.h"
 
-/*
-	big: 0 if a decimal point should be added (0.334), 1 if not
-	size: how many digits
-	range: numbers to use: 1 for 0 and 1, 2 for 0, 1, and 2, etc
-*/
-char *makestring(int big, int size, int range) {
+char *makestring(int size, int range) {
 	char *query = malloc(sizeof(char) * (size + 1));
 
 	for (int i = 0; i < size; i++) {
@@ -35,17 +30,16 @@ int main() {
 
 	srand(time(NULL));
 
-	for (int i = 0; i < 10; i++) {
-		insert__hashmap(mymap, makestring(1, 2, 2), makestring(0, 10, 9));
-	}
+	char *randomKeys = "333";
 
-	// 02102
+	insert__hashmap(mymap, randomKeys, makestring(0, 10, 9));
+	insert__hashmap(mymap, randomKeys, makestring(0, 10, 9));
+
+	hashmap__response *test = get__hashmap(mymap, randomKeys);
 
 	print__hashmap(mymap);
 
 	destroy__hashmap(mymap);
-
-	printf("destroyed a map?\n");
 
 	return 0;
 }

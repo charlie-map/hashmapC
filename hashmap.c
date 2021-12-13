@@ -7,21 +7,20 @@ typedef struct ll_def {
 	struct ll_def *next;
 	
 	char *key;
-	int max__arrLength, arrIndex; // only for hash type 2
+	int max__arrLength, arrIndex; // only for hash type 1
 	int isArray;
 	void *ll_meat; // single value pointer
-				   // for hash__type = 0 or 1
+				   // for hash__type = 0
 				   // or array for
-				   // hash__type = 2
+				   // hash__type = 1
 } ll_main_t;
 
 // will store a single hashmap
 struct Store {
 	int hashmap__size;
 	// takes a type of hashmap
-	// 0: ignore duplicate keys
-	// 1: replace value
-	// 2: append to growing value list
+	// 0: replace value
+	// 1: append to growing value list
 	int hash__type;
 	ll_main_t **map;
 
@@ -148,6 +147,52 @@ int insert__hashmap(hashmap *hash__m, char *key, void *value) {
 	return 0;
 }
 
+/*
+	get__hashmap search through a bucket for the inputted key
+	the response varies widely based on hash__type
+
+	-- for all of them: NULL is return if the key is not found
+
+		TYPE 0:
+			Returns the single value that is found
+		TYPE 1:
+			Returns a pointer to a struct (hashmap__response) with an array that can be
+			searched through and a length of said array.
+			This array should be used with caution because accidental
+			free()ing of this array will leave the key to that array
+			pointing to unknown memory. However, the freeing of the
+			returned struct will be left to the user
+*/
+void *get__hashmap(hashmap *hash__m, char *key) {
+	// get hash position
+	int mapPos = hash(key) % hash__m->hashmap__size;
+
+	ll_main_t *ll_search = hash__m->map[mapPos];
+	// search through the bucket to find any keys that match
+	while (ll_search) {
+		if (strcmp(ll_search->key, key) == 0) { // found a match
+
+			// depending on the type and mode, this will just return
+			// the value:
+			if (hash__m->hash__type == 0)
+				return ll_search->ll_meat;
+			else {
+				hashmap__response *returnMeat = malloc(sizeof(hashmap__response));
+
+				returnMeat->meat = ll_search->ll_meat;
+				returnMeat->meat__length = ll_search->arrIndex + 1;
+
+				return returnMeat;
+			}
+		}
+
+		ll_search = ll_next(ll_search);
+	}
+
+	// no key found
+	return NULL;
+}
+
 int print__hashmap(hashmap *hash__m) {
 	for (int i = 0; i < hash__m->hashmap__size; i++) {
 		if (hash__m->map[i]) {
@@ -186,16 +231,12 @@ ll_main_t *ll_makeNode(char *key, void *newValue, int hash__type) {
 }
 
 /*
-	for hash__type = 1
+	for hash__type = 0
 		takes a linked list node value ptr
 		and replaces the value with
 		updated value
 */
-int ll_specialUpdateIgnore(void *ll_oldVal, char *newKey, void *newValue, void (*destroy)(void *)) {
-	// free new key since we already
-	// have the key stored
-	free(newKey);
-
+int ll_specialUpdateIgnore(void *ll_oldVal, void *newValue, void (*destroy)(void *)) {
 	// clean up previous info at this pointer
 	destroy(ll_oldVal);
 
@@ -232,8 +273,8 @@ int ll_resizeArray(ll_main_t *ll_pointer) {
 		is an array, if not it creates and array
 		- then appends value to end of array
 */
-int ll_specialUpdateArray(ll_main_t *ll_pointer, char *key, void *newValue) {
-	free(key);
+int ll_specialUpdateArray(ll_main_t *ll_pointer, void *newValue) {
+	// The same "leave key be" for update works here as with ignore
 
 	if (!ll_pointer->isArray) { // need to create an array
 		void *ll_tempMeatStorage = ll_pointer->ll_meat;
@@ -272,10 +313,10 @@ int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__typ
 		// for hash__type == 1 or 2)
 		if (strcmp(crawler__node->key, key) == 0) {
 			if (hash__type == 1) {
-				ll_specialUpdateIgnore(crawler__node->ll_meat, key, newValue, destroy);
+				ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
 				addedPayload = 1;
 			} else if (hash__type == 2) {
-				ll_specialUpdateArray(crawler__node, key, newValue);
+				ll_specialUpdateArray(crawler__node, newValue);
 				addedPayload = 1;
 			}
 		}
@@ -286,10 +327,10 @@ int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__typ
 
 	if (strcmp(crawler__node->key, key) == 0) {
 		if (hash__type == 1) {
-			ll_specialUpdateIgnore(crawler__node->ll_meat, key, newValue, destroy);
+			ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
 			addedPayload = 1;
 		} else if (hash__type == 2) {
-			ll_specialUpdateArray(crawler__node, key, newValue);
+			ll_specialUpdateArray(crawler__node, newValue);
 			addedPayload = 1;
 		}
 	}
@@ -342,7 +383,6 @@ int ll_destroy(ll_main_t *node, void (destroyObjectPayload)(void *)) {
 	ll_main_t *node_nextStore;
 
 	do {
-		free(node->key);
 		if (node->isArray) {
 			for (int destroyVal = 0; destroyVal < node->arrIndex + 1; destroyVal++)
 				destroyObjectPayload(((void **)node->ll_meat)[destroyVal]);
