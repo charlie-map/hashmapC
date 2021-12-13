@@ -117,8 +117,8 @@ Selection for **hash type 1** will follow a similar pattern. However, the result
 
 ```C
 typedef struct ReturnHashmap {
-	void **meat;
-	int meat__length;
+	void **payload;
+	int payload__length;
 } hashmap__response;
 ```
 
@@ -126,8 +126,8 @@ Thus, to read the values from [hash type 1 insertion](#insert_char_hashtype1), t
 ```C
 hashmap__response *getMultiValue = (hashmap__response *) get__hashmap(mymap, "123");
 
-for (int printResponse = 0; printResponse < hashmap__response->meat__length; printResponse++) {
-    printf ("The value at '123' is %s\n", (char *) ((void **) hashmap__response->meat)[printResponse]);
+for (int printResponse = 0; printResponse < hashmap__response->payload__length; printResponse++) {
+    printf ("The value at '123' is %s\n", (char *) ((void **) hashmap__response->payload)[printResponse]);
 }
 ```
 
