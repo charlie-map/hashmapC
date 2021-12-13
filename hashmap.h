@@ -16,6 +16,8 @@ void *get__hashmap(hashmap *hash__m, char *key);
 
 int print__hashmap(hashmap *hash__m);
 
-int destroy__hashmap(hashmap *hash);
+int delete__hashmap(hashmap *hash__m, char *key);
+
+int deepdestroy__hashmap(hashmap *hash);
 
 #endif

@@ -180,8 +180,8 @@ void *get__hashmap(hashmap *hash__m, char *key) {
 				hashmap__response *returnMeat = malloc(sizeof(hashmap__response));
 
 				if (ll_search->isArray) {
-					returnMeat->meat = ll_search->ll_meat;
-					returnMeat->meat__length = ll_search->arrIndex + 1;
+					returnMeat->payload = ll_search->ll_meat;
+					returnMeat->payload__length = ll_search->arrIndex + 1;
 				} else { // define array
 					void *ll_tempMeatStorage = ll_search->ll_meat;
 
@@ -191,8 +191,8 @@ void *get__hashmap(hashmap *hash__m, char *key) {
 					ll_search->ll_meat = malloc(sizeof(void *) * ll_search->max__arrLength * 2);
 					((void **) ll_search->ll_meat)[0] = ll_tempMeatStorage;
 
-					returnMeat->meat = ll_search->ll_meat;
-					returnMeat->meat__length = ll_search->arrIndex + 1;
+					returnMeat->payload = ll_search->ll_meat;
+					returnMeat->payload__length = ll_search->arrIndex + 1;
 				}
 
 				return returnMeat;
@@ -216,7 +216,49 @@ int print__hashmap(hashmap *hash__m) {
 	}
 }
 
-int destroy__hashmap(hashmap *hash) {
+// uses the same process as get__hashmap, but deletes the result
+// instead. Unfortunately, the get__hashmap function cannot be
+// utilized in this context because when the linked list node
+// is being extracted, we need to know what the parent of
+// the node is
+int delete__hashmap(hashmap *hash__m, char *key) {
+	// get hash position
+	int mapPos = hash(key) % hash__m->hashmap__size;
+
+	ll_main_t *ll_parent = hash__m->map[mapPos];
+	ll_main_t *ll_search = ll_next(ll_parent);
+
+	// check parent then move into children nodes in linked list
+	if (strcmp(ll_parent->key, key) == 0) {
+		// extract parent from the hashmap:
+		hash__m->map[mapPos] = ll_search;
+
+		ll_destroy(ll_parent, hash__m->destroy);
+
+		return 0;
+	}
+
+	// search through the bucket to find any keys that match
+	while (ll_search) {
+		if (strcmp(ll_search->key, key) == 0) { // found a match
+
+			// we can then delete the key using the same approach as above
+			// extract the key from the linked list
+			ll_parent->next = ll_next(ll_search);
+
+			ll_destroy(ll_search, hash__m->destroy);
+
+			return 0;
+		}
+
+		ll_parent = ll_search;
+		ll_search = ll_next(ll_search);
+	}
+
+	return 0;
+}
+
+int deepdestroy__hashmap(hashmap *hash) {
 	// destroy linked list children
 	for (int i = 0; i < hash->hashmap__size; i++) {
 		if (hash->map[i]) {

@@ -40,9 +40,22 @@ int main() {
 
 	insert__hashmap(mymap, someKeys, someOtherRandomAllocatedValue);
 
+	char *aDifferentKey = "456";
+
+	char *aNewRandomAllocatedValue = malloc(sizeof(char) * 5);
+	strcpy(aNewRandomAllocatedValue, "play");
+
+	insert__hashmap(mymap, aDifferentKey, aNewRandomAllocatedValue);
+
 	print__hashmap(mymap);
 
-	destroy__hashmap(mymap);
+	delete__hashmap(mymap, someKeys);
+
+	printf("AFTER DELETION\n");
+
+	print__hashmap(mymap);
+
+	deepdestroy__hashmap(mymap);
 
 	return 0;
 }
