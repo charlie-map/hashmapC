@@ -179,8 +179,21 @@ void *get__hashmap(hashmap *hash__m, char *key) {
 			else {
 				hashmap__response *returnMeat = malloc(sizeof(hashmap__response));
 
-				returnMeat->meat = ll_search->ll_meat;
-				returnMeat->meat__length = ll_search->arrIndex + 1;
+				if (ll_search->isArray) {
+					returnMeat->meat = ll_search->ll_meat;
+					returnMeat->meat__length = ll_search->arrIndex + 1;
+				} else { // define array
+					void *ll_tempMeatStorage = ll_search->ll_meat;
+
+					ll_search->max__arrLength = 2;
+					ll_search->arrIndex = 0;
+
+					ll_search->ll_meat = malloc(sizeof(void *) * ll_search->max__arrLength * 2);
+					((void **) ll_search->ll_meat)[0] = ll_tempMeatStorage;
+
+					returnMeat->meat = ll_search->ll_meat;
+					returnMeat->meat__length = ll_search->arrIndex + 1;
+				}
 
 				return returnMeat;
 			}

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "hashmap.h"
 
@@ -9,9 +10,6 @@ char *makestring(int size, int range) {
 	for (int i = 0; i < size; i++) {
 		query[i] = (char) ((rand() % (range + 1)) + 48);
 	}
-
-	if (!big)
-		query[1] = '.';
 
 	query[size] = '\0';
 	return query;
@@ -30,12 +28,17 @@ int main() {
 
 	srand(time(NULL));
 
-	char *randomKeys = "333";
+	char *someKeys = "123";
 
-	insert__hashmap(mymap, randomKeys, makestring(0, 10, 9));
-	insert__hashmap(mymap, randomKeys, makestring(0, 10, 9));
+	char *someRandomAllocatedValue = malloc(sizeof(char) * 5);
+	strcpy(someRandomAllocatedValue, "fun!");
 
-	hashmap__response *test = get__hashmap(mymap, randomKeys);
+	insert__hashmap(mymap, someKeys, someRandomAllocatedValue);
+
+	char *someOtherRandomAllocatedValue = malloc(sizeof(char) * 5);
+	strcpy(someOtherRandomAllocatedValue, "test");
+
+	insert__hashmap(mymap, someKeys, someOtherRandomAllocatedValue);
 
 	print__hashmap(mymap);
 
