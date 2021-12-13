@@ -2,8 +2,8 @@
 #define __HASH_T__
 
 typedef struct ReturnHashmap { // used only for type 1
-	void **meat;
-	int meat__length;
+	void **payload;
+	int payload__length;
 } hashmap__response;
 
 typedef struct Store hashmap;
