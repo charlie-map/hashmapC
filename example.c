@@ -24,7 +24,7 @@ void destroyObject(void *str) {
 }
 
 int main() {
-	hashmap *mymap = make__hashmap(2, printObjectPayload, destroyObject);
+	hashmap *mymap = make__hashmap(1, printObjectPayload, destroyObject);
 
 	srand(time(NULL));
 

@@ -132,7 +132,6 @@ int insert__hashmap(hashmap *hash__m, char *key, void *value) {
 	int mapPos = hash(key) % hash__m->hashmap__size;
 	int bucketLength = 0; // counts size of the bucket at mapPos
 
-
 	// see if there is already a bucket defined at mapPos
 	if (hash__m->map[mapPos])
 		bucketLength = ll_insert(hash__m->map[mapPos], key, value, hash__m->hash__type, hash__m->destroy);
@@ -322,7 +321,7 @@ int ll_resizeArray(ll_main_t *ll_pointer) {
 }
 
 /*
-	for hash__type = 2
+	for hash__type = 1
 		takes linked list pointer
 		- first makes sure that ll_pointer->ll_meat
 		is an array, if not it creates and array
@@ -365,12 +364,12 @@ int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__typ
 	// (each node in this linked list)
 	while (crawler__node->next) {
 		// found a duplicate (only matters
-		// for hash__type == 1 or 2)
+		// for hash__type == 0 or 1)
 		if (strcmp(crawler__node->key, key) == 0) {
-			if (hash__type == 1) {
+			if (hash__type == 0) {
 				ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
 				addedPayload = 1;
-			} else if (hash__type == 2) {
+			} else if (hash__type == 1) {
 				ll_specialUpdateArray(crawler__node, newValue);
 				addedPayload = 1;
 			}
@@ -381,10 +380,10 @@ int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__typ
 	}
 
 	if (strcmp(crawler__node->key, key) == 0) {
-		if (hash__type == 1) {
+		if (hash__type == 0) {
 			ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
 			addedPayload = 1;
-		} else if (hash__type == 2) {
+		} else if (hash__type == 1) {
 			ll_specialUpdateArray(crawler__node, newValue);
 			addedPayload = 1;
 		}
