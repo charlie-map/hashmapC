@@ -6,7 +6,7 @@
 typedef struct ll_def {
 	struct ll_def *next;
 	
-	char *key;
+	void *key;
 	int max__arrLength, arrIndex; // only for hash type 1
 	int isArray;
 	void *ll_meat; // single value pointer
@@ -45,8 +45,8 @@ unsigned long hash(unsigned char *str) {
 
 
 // define some linked list functions (see bottom of file for function write outs):
-ll_main_t *ll_makeNode(char *key, void *value, int hash__type);
-int ll_insert(ll_main_t *node, char *key, void *payload, int hash__type, void (*destroy)(void *));
+ll_main_t *ll_makeNode(void *key, void *value, int hash__type);
+int ll_insert(ll_main_t *node, void *key, void *payload, int hash__type, void (*destroy)(void *));
 
 ll_main_t *ll_next(ll_main_t *curr);
 
@@ -128,7 +128,7 @@ int re__hashmap(hashmap *hash__m) {
 	return 0;
 }
 
-int insert__hashmap(hashmap *hash__m, char *key, void *value) {
+int insert__hashmap(hashmap *hash__m, void *key, void *value) {
 	int mapPos = hash(key) % hash__m->hashmap__size;
 	int bucketLength = 0; // counts size of the bucket at mapPos
 
@@ -162,7 +162,7 @@ int insert__hashmap(hashmap *hash__m, char *key, void *value) {
 			pointing to unknown memory. However, the freeing of the
 			returned struct will be left to the user
 */
-void *get__hashmap(hashmap *hash__m, char *key) {
+void *get__hashmap(hashmap *hash__m, void *key) {
 	// get hash position
 	int mapPos = hash(key) % hash__m->hashmap__size;
 
@@ -208,7 +208,7 @@ void *get__hashmap(hashmap *hash__m, char *key) {
 int print__hashmap(hashmap *hash__m) {
 	for (int i = 0; i < hash__m->hashmap__size; i++) {
 		if (hash__m->map[i]) {
-			printf("Added a value? %d ", i);
+			printf("Linked list at index %d ", i);
 			ll_print(hash__m->map[i], hash__m->printer);
 			printf("\n");
 		}
@@ -220,7 +220,7 @@ int print__hashmap(hashmap *hash__m) {
 // utilized in this context because when the linked list node
 // is being extracted, we need to know what the parent of
 // the node is
-int delete__hashmap(hashmap *hash__m, char *key) {
+int delete__hashmap(hashmap *hash__m, void *key) {
 	// get hash position
 	int mapPos = hash(key) % hash__m->hashmap__size;
 
@@ -273,7 +273,7 @@ int deepdestroy__hashmap(hashmap *hash) {
 }
 
 
-ll_main_t *ll_makeNode(char *key, void *newValue, int hash__type) {
+ll_main_t *ll_makeNode(void *key, void *newValue, int hash__type) {
 	ll_main_t *new__node = (ll_main_t *) malloc(sizeof(ll_main_t));
 
 	new__node->isArray = 0;
@@ -356,7 +356,7 @@ int ll_specialUpdateArray(ll_main_t *ll_pointer, void *newValue) {
 }
 
 // finds the tail and appends
-int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__type, void (*destroy)(void *)) {
+int ll_insert(ll_main_t *crawler__node, void *key, void *newValue, int hash__type, void (*destroy)(void *)) {
 
 	int bucket_size = 1, addedPayload = 0;
 
@@ -410,7 +410,7 @@ int ll_printNodeArray(ll_main_t *curr, void (*printer)(void *)) {
 }
 
 int ll_print(ll_main_t *curr, void (*printer)(void *)) {
-	printf("\n\tLL %s\n", curr->key);
+	printf("\n\tLL node %s with payload(s):\n", curr->key);
 	if (curr->isArray)
 		ll_printNodeArray(curr, printer);
 	else
