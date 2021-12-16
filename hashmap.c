@@ -1,7 +1,7 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include "hashmap.h"
 
 /*
@@ -15,8 +15,11 @@
 typedef struct VTable {
 	void *key;
 
+	// these define how we utilize the key
+	// DEFAULT behavior is using a char * setup
 	void (*printKey)(void *);
 	int (*compareKey)(void *, void *);
+	void (*destroyKey)(void *);
 } vtableKeyStore;
 
 typedef struct ll_def {
@@ -472,9 +475,26 @@ int ll_destroy(ll_main_t *node, void (destroyObjectPayload)(void *)) {
 }
 
 
+//void (*printKey)(void *), int (*compareKey)(void *, void *)
+int insert__hashmap(hashmap *hash__m, void *key, void *value, ...) {
+	va_list ap;
+	vtableKeyStore inserter = { .key = key };
 
-int insert__hashmap(hashmap *hash__m, void *key, void (*printKey)(void *), int (*compareKey)(void *, void *), void *value) {
-	vtableKeyStore inserter = { .key = key, .printKey = printKey, .compareKey = compareKey };
+	va_start(ap, 3);
+	// set printKey (if exists)
+	inserter.printKey = va_arg(ap, void (*printKey)(void *));
+	// if printKey is NULL, we set to DEFAULT
+	if (!inserter.printKey)
+		inserter.printKey = printCharKey;
+
+	// do the same for compareKey and 
+	inserter.compareKey = va_arg(ap, int (*compareKey)(void *, void *));
+	if (!inserter.compareKey)
+		inserter.compareKey = compareCharKey;
+
+	inserter.destroyKey = va_arg(ap, void (*destroyKey)(void *));
+	// if destroy is NULL, we don't want to add since this by DEFAULT
+	// does no exist
 
 	METAinsert__hashmap(hash__m, inserter, value);
 
