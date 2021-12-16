@@ -10,8 +10,6 @@ typedef struct Store hashmap;
 
 hashmap *make__hashmap(int hash__type, void (*printer)(void *), void (*destroy)(void *));
 
-int insert__hashmap(hashmap *hash__m, void *key, void *value);
-
 void *get__hashmap(hashmap *hash__m, void *key);
 
 int print__hashmap(hashmap *hash__m);
@@ -19,5 +17,7 @@ int print__hashmap(hashmap *hash__m);
 int delete__hashmap(hashmap *hash__m, void *key);
 
 int deepdestroy__hashmap(hashmap *hash);
+
+int insert__hashmap(hashmap *hash__m, void *key, void (*printKey)(void *), int (*compareKey)(void *, void *), void *value);
 
 #endif
