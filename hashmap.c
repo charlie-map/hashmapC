@@ -1,12 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "hashmap.h"
+
+/*
+	vtableKeyStore is used for using unknown type keys in the 
+	hashmap. Because the variable type is unknown, the use
+	of this struct plus the function (some function name)__hashmap() can
+	be used to decipher any type of possible key in the hashmap
+
+	SEE bottom of the page for the function declarations and uses
+*/
+typedef struct VTable {
+	void *key;
+
+	void (*printKey)(void *);
+	int (*compareKey)(void *, void *);
+} vtableKeyStore;
 
 typedef struct ll_def {
 	struct ll_def *next;
 	
-	char *key;
+	vtableKeyStore key;
 	int max__arrLength, arrIndex; // only for hash type 1
 	int isArray;
 	void *ll_meat; // single value pointer
@@ -45,8 +61,8 @@ unsigned long hash(unsigned char *str) {
 
 
 // define some linked list functions (see bottom of file for function write outs):
-ll_main_t *ll_makeNode(char *key, void *value, int hash__type);
-int ll_insert(ll_main_t *node, char *key, void *payload, int hash__type, void (*destroy)(void *));
+ll_main_t *ll_makeNode(vtableKeyStore key, void *value, int hash__type);
+int ll_insert(ll_main_t *node, vtableKeyStore key, void *payload, int hash__type, void (*destroy)(void *));
 
 ll_main_t *ll_next(ll_main_t *curr);
 
@@ -98,7 +114,7 @@ int re__hashmap(hashmap *hash__m) {
 		// if there is contents
 		while (hash__m->map[old__mapPos]) { // need to look at each linked node
 			// recalculate hash
-			new__mapPos = hash(hash__m->map[old__mapPos]->key) % new__mapLength;
+			new__mapPos = hash(hash__m->map[old__mapPos]->key.key) % new__mapLength;
 
 			// store the node in temporary storage
 			ll_main_t *currNode = hash__m->map[old__mapPos];
@@ -128,8 +144,8 @@ int re__hashmap(hashmap *hash__m) {
 	return 0;
 }
 
-int insert__hashmap(hashmap *hash__m, char *key, void *value) {
-	int mapPos = hash(key) % hash__m->hashmap__size;
+int METAinsert__hashmap(hashmap *hash__m, vtableKeyStore key, void *value) {
+	int mapPos = hash(key.key) % hash__m->hashmap__size;
 	int bucketLength = 0; // counts size of the bucket at mapPos
 
 	// see if there is already a bucket defined at mapPos
@@ -162,14 +178,14 @@ int insert__hashmap(hashmap *hash__m, char *key, void *value) {
 			pointing to unknown memory. However, the freeing of the
 			returned struct will be left to the user
 */
-void *get__hashmap(hashmap *hash__m, char *key) {
+void *get__hashmap(hashmap *hash__m, void *key) {
 	// get hash position
 	int mapPos = hash(key) % hash__m->hashmap__size;
 
 	ll_main_t *ll_search = hash__m->map[mapPos];
 	// search through the bucket to find any keys that match
 	while (ll_search) {
-		if (strcmp(ll_search->key, key) == 0) { // found a match
+		if (ll_search->key.compareKey(ll_search->key.key, key)) { // found a match
 
 			// depending on the type and mode, this will just return
 			// the value:
@@ -208,7 +224,7 @@ void *get__hashmap(hashmap *hash__m, char *key) {
 int print__hashmap(hashmap *hash__m) {
 	for (int i = 0; i < hash__m->hashmap__size; i++) {
 		if (hash__m->map[i]) {
-			printf("Added a value? %d ", i);
+			printf("Linked list at index %d ", i);
 			ll_print(hash__m->map[i], hash__m->printer);
 			printf("\n");
 		}
@@ -220,7 +236,7 @@ int print__hashmap(hashmap *hash__m) {
 // utilized in this context because when the linked list node
 // is being extracted, we need to know what the parent of
 // the node is
-int delete__hashmap(hashmap *hash__m, char *key) {
+int delete__hashmap(hashmap *hash__m, void *key) {
 	// get hash position
 	int mapPos = hash(key) % hash__m->hashmap__size;
 
@@ -228,7 +244,7 @@ int delete__hashmap(hashmap *hash__m, char *key) {
 	ll_main_t *ll_search = ll_next(ll_parent);
 
 	// check parent then move into children nodes in linked list
-	if (strcmp(ll_parent->key, key) == 0) {
+	if (ll_parent->key.compareKey(ll_parent->key.key, key)) {
 		// extract parent from the hashmap:
 		hash__m->map[mapPos] = ll_search;
 
@@ -239,7 +255,7 @@ int delete__hashmap(hashmap *hash__m, char *key) {
 
 	// search through the bucket to find any keys that match
 	while (ll_search) {
-		if (strcmp(ll_search->key, key) == 0) { // found a match
+		if (ll_search->key.compareKey(ll_search->key.key, key)) { // found a match
 
 			// we can then delete the key using the same approach as above
 			// extract the key from the linked list
@@ -273,7 +289,7 @@ int deepdestroy__hashmap(hashmap *hash) {
 }
 
 
-ll_main_t *ll_makeNode(char *key, void *newValue, int hash__type) {
+ll_main_t *ll_makeNode(vtableKeyStore key, void *newValue, int hash__type) {
 	ll_main_t *new__node = (ll_main_t *) malloc(sizeof(ll_main_t));
 
 	new__node->isArray = 0;
@@ -290,14 +306,12 @@ ll_main_t *ll_makeNode(char *key, void *newValue, int hash__type) {
 		and replaces the value with
 		updated value
 */
-int ll_specialUpdateIgnore(void *ll_oldVal, void *newValue, void (*destroy)(void *)) {
+void *ll_specialUpdateIgnore(void *ll_oldVal, void *newValue, void (*destroy)(void *)) {
 	// clean up previous info at this pointer
 	destroy(ll_oldVal);
 
 	// update
-	ll_oldVal = newValue;
-
-	return 0;
+	return newValue;
 }
 
 // takes the ll_pointer->ll_meat and doubles
@@ -356,7 +370,7 @@ int ll_specialUpdateArray(ll_main_t *ll_pointer, void *newValue) {
 }
 
 // finds the tail and appends
-int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__type, void (*destroy)(void *)) {
+int ll_insert(ll_main_t *crawler__node, vtableKeyStore key, void *newValue, int hash__type, void (*destroy)(void *)) {
 
 	int bucket_size = 1, addedPayload = 0;
 
@@ -365,9 +379,9 @@ int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__typ
 	while (crawler__node->next) {
 		// found a duplicate (only matters
 		// for hash__type == 0 or 1)
-		if (strcmp(crawler__node->key, key) == 0) {
+		if (crawler__node->key.compareKey(crawler__node->key.key, key.key)) {
 			if (hash__type == 0) {
-				ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
+				crawler__node->ll_meat = ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
 				addedPayload = 1;
 			} else if (hash__type == 1) {
 				ll_specialUpdateArray(crawler__node, newValue);
@@ -379,9 +393,10 @@ int ll_insert(ll_main_t *crawler__node, char *key, void *newValue, int hash__typ
 		bucket_size++;
 	}
 
-	if (strcmp(crawler__node->key, key) == 0) {
+	printf("Testing keys %d\n", crawler__node->key.compareKey(crawler__node->key.key, key.key));
+	if (crawler__node->key.compareKey(crawler__node->key.key, key.key)) {
 		if (hash__type == 0) {
-			ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
+			crawler__node->ll_meat = ll_specialUpdateIgnore(crawler__node->ll_meat, newValue, destroy);
 			addedPayload = 1;
 		} else if (hash__type == 1) {
 			ll_specialUpdateArray(crawler__node, newValue);
@@ -410,14 +425,18 @@ int ll_printNodeArray(ll_main_t *curr, void (*printer)(void *)) {
 }
 
 int ll_print(ll_main_t *curr, void (*printer)(void *)) {
-	printf("\n\tLL %s\n", curr->key);
+	printf("\n\tLL node ");
+	//printVoid()
+	curr->key.printKey(curr->key.key);
+	printf(" with payload(s):\n");
 	if (curr->isArray)
 		ll_printNodeArray(curr, printer);
 	else
 		printer(curr->ll_meat);
 
 	while (curr = ll_next(curr)) {
-		printf("\tLL\n");
+		printf("\tLL node ");
+		printf(" with payload(s):\n");
 		if (curr->isArray)
 			ll_printNodeArray(curr, printer);
 		else
@@ -448,6 +467,16 @@ int ll_destroy(ll_main_t *node, void (destroyObjectPayload)(void *)) {
 		node_nextStore = node->next;
 		free(node);
 	} while (node = node_nextStore);
+
+	return 0;
+}
+
+
+
+int insert__hashmap(hashmap *hash__m, void *key, void (*printKey)(void *), int (*compareKey)(void *, void *), void *value) {
+	vtableKeyStore inserter = { .key = key, .printKey = printKey, .compareKey = compareKey };
+
+	METAinsert__hashmap(hash__m, inserter, value);
 
 	return 0;
 }
