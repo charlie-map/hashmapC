@@ -11,23 +11,31 @@ void destroyPayload(void *load) {
 	free(load);
 }
 
-void printIntegerKey(void *integer) {
+void printCharKey(void *characters) {
+	printf("%s", (char *) characters);
+}
+
+int compareCharKey(void *characters, void *otherValue) {
+	return strcmp((char *) characters, (char *) otherValue) == 0;
+}
+
+void printIntKey(void *integer) {
 	printf("%d", *((int *) integer));
 }
 
-int compareIntegerKey(void *integer, void *otherValue) {
+int compareIntKey(void *integer, void *otherValue) {
 	return *((int *) integer) == *((int *) otherValue);
 }
 
 int main() {
 	hashmap *mymap = make__hashmap(0, printPayload, destroyPayload);
 
-	/* normal insert
+	// normal insert
 	char *randomChar1 = malloc(sizeof(char) * 9);
 	strcpy(randomChar1, "try this");
 
-	insert__hashmap(mymap, "random key", randomChar1);
-	*/
+	insert__hashmap(mymap, "random key", printCharKey, compareCharKey, randomChar1);
+	
 
 	// integer key insert
 	int testKey = 97;
@@ -35,30 +43,27 @@ int main() {
 	char *randomChar2 = malloc(sizeof(char) * 21);
 	strcpy(randomChar2, "this uses an integer");
 
-	insert__hashmap(mymap, &testKey, printIntegerKey, compareIntegerKey, randomChar2);
+	insert__hashmap(mymap, &testKey, printIntKey, compareIntKey, randomChar2);
 
 	char *randomChar4 = malloc(sizeof(char) * 16);
 	strcpy(randomChar4, "a different int");
 
-	insert__hashmap(mymap, &testKey, printIntegerKey, compareIntegerKey, randomChar4);
+	insert__hashmap(mymap, &testKey, printIntKey, compareIntKey, randomChar4);
 
-	/* struct key insert
-	struct ValuePassChar *passByValChar = malloc(sizeof(struct ValuePassChar));
-	passByValChar->node[5] = '\0';
+	// test with manually allocated key:
+	char *allocatedKey = malloc(sizeof(char) * 5);
+	strcpy(allocatedKey, "hey!");
 
-	for (int fillChar = 0; fillChar < 5; fillChar++) {
-		passByValChar->node[fillChar] = (char) fillChar;
-	}
+	char *randomChar3 = malloc(sizeof(char) * 6);
+	strcpy(randomChar3, "nice?");
 
-	char *randomChar3 = malloc(sizeof(char) * 12);
-	strcpy(randomChar3, "uses struct");
-
-	insert__hashmap(mymap, passByValChar, randomChar3);
-	*/
+	insert__hashmap(mymap, allocatedKey, printCharKey, compareCharKey, randomChar3);
 
 	print__hashmap(mymap);
 
 	deepdestroy__hashmap(mymap);
+
+	free(allocatedKey);
 
 	return 0;
 }
