@@ -21,12 +21,12 @@ int deepdestroy__hashmap(hashmap *hash);
 int insert__hashmap(hashmap *hash__m, void *key, void *value, ...);
 
 // simple key type functions
-void printCharKey(void *characters) { printf("%s", (char *) characters); }
-int compareCharKey(void *characters, void *otherValue) { return strcmp((char *) characters, (char *) otherValue) == 0; }
-void destroyCharKey(void *characters) { free(characters); }
+void printCharKey(void *characters);
+int compareCharKey(void *characters, void *otherValue);
+void destroyCharKey(void *characters);
 
-void printIntKey(void *integer) { printf("%d", *((int *) integer)); }
-int compareIntKey(void *integer, void *otherValue) { return *((int *) integer) == *((int *) otherValue); }
-void destroyIntKey(void *integer) { /* We can't free that! */ }
+void printIntKey(void *integer);
+int compareIntKey(void *integer, void *otherValue);
+void destroyIntKey(void *integer);
 
 #endif

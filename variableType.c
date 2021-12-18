@@ -18,7 +18,7 @@ int main() {
 	char *randomChar1 = malloc(sizeof(char) * 9);
 	strcpy(randomChar1, "try this");
 
-	insert__hashmap(mymap, "random key", randomChar1, printCharKey, compareCharKey);
+	insert__hashmap(mymap, "random key", randomChar1, "-d");
 	
 
 	// integer key insert
@@ -27,12 +27,13 @@ int main() {
 	char *randomChar2 = malloc(sizeof(char) * 21);
 	strcpy(randomChar2, "this uses an integer");
 
-	insert__hashmap(mymap, &testKey, randomChar2, printIntKey, compareIntKey);
+	insert__hashmap(mymap, &testKey, randomChar2, printIntKey, compareIntKey, NULL);
 
+	// another integer key test using "-i" parameter
 	char *randomChar4 = malloc(sizeof(char) * 16);
 	strcpy(randomChar4, "a different int");
 
-	insert__hashmap(mymap, &testKey, randomChar4, printIntKey, compareIntKey);
+	insert__hashmap(mymap, &testKey, randomChar4, "-i");
 
 	// test with manually allocated key:
 	char *allocatedKey = malloc(sizeof(char) * 5);
@@ -41,13 +42,11 @@ int main() {
 	char *randomChar3 = malloc(sizeof(char) * 6);
 	strcpy(randomChar3, "nice?");
 
-	insert__hashmap(mymap, allocatedKey, randomChar3, printCharKey, compareCharKey);
+	insert__hashmap(mymap, allocatedKey, randomChar3, printCharKey, compareCharKey, destroyCharKey);
 
 	print__hashmap(mymap);
 
 	deepdestroy__hashmap(mymap);
-
-	free(allocatedKey);
 
 	return 0;
 }
