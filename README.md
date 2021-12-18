@@ -1,7 +1,14 @@
 # hashmap
 ###### Charlie Hall
 
-This is a simple implementation of a hashmap where a user can input a `key` along with a `value` and have constant time insertion and selection. This follows the general approach for a hashmap; uses a hash function (a bit shifting hash function), which will devide keys uniformly into buckets of values. The buckets are implemented using a built in linked list that has been altered to have functionality specifically for this approach. Since buckets are in use and no hash function has perfect hashing, the theoretical complexity for insertion and selection is `m` where `m` is the number of items in a single bucket. As seen at the top of `hashmap.c`, the variable `MAX_BUCKET_SIZE` defines how many elements can be in a single bucket before a resizing (see below) of the hashmap occurs. Each linked list node will have a `void *` pointer to whatever input is given, which means the hashmap can contain any form of information from small `char *` to major structs. The hashmap has the following main functionalities:
+This is a simple implementation of a hashmap where a user can input a `key` along with a `value` and have constant time insertion and selection. This follows the general approach for a hashmap; uses a hash function (a bit shifting hash function), which will devide keys uniformly into buckets of values. The buckets are implemented using a built in linked list that has been altered to have functionality specifically for this approach. Since buckets are in use and no hash function has perfect hashing, the theoretical complexity for insertion and selection is `m` where `m` is the number of items in a single bucket. As seen at the top of `hashmap.c`, the char *allocatedKey = malloc(sizeof(char) * 5);
+	strcpy(allocatedKey, "hey!");
+
+	char *randomChar3 = malloc(sizeof(char) * 6);
+	strcpy(randomChar3, "nice?");
+
+	insert__hashmap(mymap, allocatedKey, randomChar3, printCharKey, compareCharKey, destroyCharKey);
+variable `MAX_BUCKET_SIZE` defines how many elements can be in a single bucket before a resizing (see below) of the hashmap occurs. Each linked list node will have a `void *` pointer to whatever input is given, which means the hashmap can contain any form of information from small `char *` to major structs. The hashmap has the following main functionalities:
 1. [Hashmap Creation - `make__hashmap()`](#create-the-hashmap)
 2. [Hashmap Insertion - `insert__hashmap()`](#insert-into-the-hashmap)
 3. [Hashmap Selection - `get__hashmap()`](#select-from-hashmap)
@@ -43,25 +50,42 @@ void destroyObject(void *str) {
 A similar pattern can be used for creating a `printer` function
 
 # insert into the hashmap
-Insert hashmap involves taking a key (**uses only strings currently**) and a value and creating a new linked list node in a specific bucket. Here's a simple example of this using a `char *` as the value. For this example, assume that **hash type 0** is in use. Also of note: ***make sure*** that the value is allocated to ensure that no invalid frees occur at destruction.
+Insert hashmap involves taking a key (**uses only strings currently**) and a value and creating a new linked list node in a specific bucket. Here's a simple example of this using a `char *` as the value. For this example, assume that **hash type 0** is in use. Also of note: ***make sure*** that the value is allocated to ensure that no invalid frees occur at destruction. As for the keys, any type of key can theoretically be used, but different functinos will be added to ensure that the key can work.
 
 <a name="insert_char_hashtype0"></a>
 ###### insert into hash type 0 with `char *`
+With a normal `char *` unallocated key, the following features can be used, with the fourth parameter `"-d"` means _default_ behavior, which uses a simple print, and comparer function for the keys (which can be seen in the [hashmap.c](https://github.com/charlie-map/hashmapC/blob/overloadFunction/hashmap.c) function). The two example shows two insertions with `char *`'s, which will also show the use of `"-d"` and of `robust` manual insertion of the key functions. The `NULL` in the second `insert__hashmap` defines the "destroyKey" position, but the key in this scenario does not need a function. ***Important***: unless you are using a simple parameter such as `"-d"`, all **three** parameters need to be inserted.
+
 ```C
 char *someKey = "123";
 
 char *someRandomAllocatedValue = malloc(sizeof(char) * 5);
 strcpy(someRandomAllocatedValue, "hey!");
 
-insert__hashmap(mymap, someKey, someRandomAllocatedValue);
+insert__hashmap(mymap, someKey, someRandomAllocatedValue, "-d");
 
 char *someOtherRandomAllocatedValue = malloc(sizeof(char) * 5);
 strcpy(someOtherRandomAllocatedValue, "test");
 
-insert__hashmap(mymap, someKey, someOtherRandomAllocatedValue);
+insert__hashmap(mymap, someKey, someOtherRandomAllocatedValue, printCharKey, compareCharKey, NULL);
 ```
 
-Note that using **hash type 0** in this scenario means that `someRandomAllocatedValue` is overwritten and thus deleted in this process by the hashmap. As for inserting with larger values such as structs, the following example shows utilizing the simple struct class called `Animal`:
+Note that using **hash type 0** in this scenario means that `someRandomAllocatedValue` is overwritten and thus deleted in this process by the hashmap. The same can be done for integer keys. For simplicity, the parameter `"-i"` can be used to define the use of integers. Comparing and contrasting both for integers:
+
+```C
+int someKey = 20;
+
+char *someRandomAllocatedValue = malloc(sizeof(char) * 5);
+strcpy(someRandomAllocatedValue, "hey!");
+
+insert__hashmap(mymap, &someKey, someRandomeAllocatedValue, "-i");
+
+char *someOtherRandomAllocatedValue = malloc(sizeof(char) * 5);
+strcpy(someOtherRandomAllocatedValue, "test");
+
+insert__hashmap(mymap, &someKey, someOtherRandomAllocatedValue, printIntKey, compareIntKey, NULL);
+```
+As for inserting with larger values such as structs, the following example shows utilizing the simple struct class called `Animal`:
 
 <a name="insert_struct_hashtype0"></a>
 ###### insert into hash type 0 with a struct
@@ -78,7 +102,7 @@ animal *giraffe = malloc(sizeof(animal));
 giraffe->animal_name = "Jefferey";
 giraffe->animal_size = "400";
 
-insert__hashmap(mymap, someDifferentKey, giraffe);
+insert__hashmap(mymap, someDifferentKey, giraffe, "-d");
 ```
 
 The same concept can be used for **hash type 1** where the values create an array at each location in the hashmap. The only change is instead creating the hashmap with `hash type = 0`, this would be `hash type = 1`:

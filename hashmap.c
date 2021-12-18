@@ -1,7 +1,7 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include "hashmap.h"
 
 /*
@@ -15,8 +15,11 @@
 typedef struct VTable {
 	void *key;
 
+	// these define how we utilize the key
+	// DEFAULT behavior is using a char * setup
 	void (*printKey)(void *);
 	int (*compareKey)(void *, void *);
+	void (*destroyKey)(void *);
 } vtableKeyStore;
 
 typedef struct ll_def {
@@ -456,6 +459,9 @@ int ll_destroy(ll_main_t *node, void (destroyObjectPayload)(void *)) {
 	ll_main_t *node_nextStore;
 
 	do {
+		if (node->key.destroyKey)
+			node->key.destroyKey(node->key.key);
+
 		if (node->isArray) {
 			for (int destroyVal = 0; destroyVal < node->arrIndex + 1; destroyVal++)
 				destroyObjectPayload(((void **)node->ll_meat)[destroyVal]);
@@ -472,9 +478,50 @@ int ll_destroy(ll_main_t *node, void (destroyObjectPayload)(void *)) {
 }
 
 
+// DEFAULT function declarations
+void printCharKey(void *characters) {
+	printf("%s", (char *) characters);
+}
+int compareCharKey(void *characters, void *otherValue) {
+	return strcmp((char *) characters, (char *) otherValue) == 0;
+}
+void destroyCharKey(void *characters) { free(characters); }
 
-int insert__hashmap(hashmap *hash__m, void *key, void (*printKey)(void *), int (*compareKey)(void *, void *), void *value) {
-	vtableKeyStore inserter = { .key = key, .printKey = printKey, .compareKey = compareKey };
+void printIntKey(void *integer) {
+	printf("%d", *((int *) integer));
+}
+int compareIntKey(void *integer, void *otherValue) {
+	return *((int *) integer) == *((int *) otherValue);
+}
+void destroyIntKey(void *integer) { /* We can't free that! */ }
+
+
+int insert__hashmap(hashmap *hash__m, void *key, void *value, ...) {
+	va_list ap;
+	vtableKeyStore inserter = { .key = key };
+
+	va_start(ap, value);
+	// could be param definer or the printKey function
+	void *firstArgumentCheck = va_arg(ap, char *);
+
+	// check for DEFAULT ("-d") or INT ("-i"):
+	if (strcmp((char *) firstArgumentCheck, "-d") == 0) {// use default
+		inserter.printKey = printCharKey;
+		inserter.compareKey = compareCharKey;
+		inserter.destroyKey = NULL;
+	} else if (strcmp((char *) firstArgumentCheck, "-i") == 0) {
+		inserter.printKey = printIntKey;
+		inserter.compareKey = compareIntKey;
+		inserter.destroyKey = NULL;
+	} else {
+		inserter.printKey = firstArgumentCheck;
+		// do the same for compareKey 
+		inserter.compareKey = va_arg(ap, int (*)(void *, void *));
+
+		inserter.destroyKey = va_arg(ap, void (*)(void *));
+		// if destroy is NULL, we don't want to add since this by DEFAULT
+		// does no exist
+	}	
 
 	METAinsert__hashmap(hash__m, inserter, value);
 
