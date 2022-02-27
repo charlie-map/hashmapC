@@ -549,7 +549,7 @@ int insert__hashmap(hashmap *hash__m, void *key, void *value, ...) {
 		inserter.compareKey = compareIntKey;
 		inserter.destroyKey = NULL;
 	} else {
-		inserter.printKey = firstArgumentCheck;
+		inserter.printKey = va_arg(ap, void (*)(void *));
 		// do the same for compareKey 
 		inserter.compareKey = va_arg(ap, int (*)(void *, void *));
 
