@@ -67,7 +67,7 @@ insert__hashmap(mymap, someKey, someRandomAllocatedValue, "-d");
 char *someOtherRandomAllocatedValue = malloc(sizeof(char) * 5);
 strcpy(someOtherRandomAllocatedValue, "test");
 
-insert__hashmap(mymap, someKey, someOtherRandomAllocatedValue, printCharKey, compareCharKey, NULL);
+insert__hashmap(mymap, someKey, someOtherRandomAllocatedValue, "", printCharKey, compareCharKey, NULL);
 ```
 
 Note that using **hash type 0** in this scenario means that `someRandomAllocatedValue` is overwritten and thus deleted in this process by the hashmap. The same can be done for integer keys. For simplicity, the parameter `"-i"` can be used to define the use of integers. Comparing and contrasting both for integers:
@@ -83,7 +83,7 @@ insert__hashmap(mymap, &someKey, someRandomeAllocatedValue, "-i");
 char *someOtherRandomAllocatedValue = malloc(sizeof(char) * 5);
 strcpy(someOtherRandomAllocatedValue, "test");
 
-insert__hashmap(mymap, &someKey, someOtherRandomAllocatedValue, printIntKey, compareIntKey, NULL);
+insert__hashmap(mymap, &someKey, someOtherRandomAllocatedValue, "", printIntKey, compareIntKey, NULL);
 ```
 As for inserting with larger values such as structs, the following example shows utilizing the simple struct class called `Animal`:
 
