@@ -235,6 +235,7 @@ void *get__hashmap(hashmap *hash__m, void *key) {
 					returnMeat->payload = ll_search->ll_meat;
 					returnMeat->payload__length = ll_search->arrIndex + 1;
 				} else { // define array
+					ll_search->isArray = 1;
 					void *ll_tempMeatStorage = ll_search->ll_meat;
 
 					ll_search->max__arrLength = 2;
